@@ -88,6 +88,7 @@ tr.detail td{background:#55d6be0a;background:color-mix(in srgb,var(--accent) 4%,
 .breakdown{font-size:.78rem;color:var(--muted);margin:8px 0}
 .breakdown b{color:var(--accent)}
 canvas{width:100%;display:block}
+pre.script{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-height:440px;white-space:pre-wrap;word-break:break-word;margin:12px 0 0}
 .hlist{display:grid;gap:6px;margin:14px 0}
 .hitem{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.82rem}
 .hitem .muted{font-size:.75rem}
@@ -237,6 +238,28 @@ footer{margin:34px 0 10px;text-align:center}
 </details>
 </section>
 
+<section class="card" id="scriptsCard" aria-label="Download setup scripts">
+<h2>Download setup scripts</h2>
+<p class="muted small">Generate a ready-to-run script that applies the selected resolver on your device. Every script sets the DNS servers, flushes the cache, and includes a built-in revert option. Scripts are generated locally and never leave your browser.</p>
+<div class="controls">
+<label>Resolver<select id="scriptResolver"></select></label>
+<label>Platform
+<select id="scriptPlatform">
+<option value="windows">Windows (PowerShell)</option>
+<option value="macos">macOS (bash)</option>
+<option value="linux">Linux (bash)</option>
+</select></label>
+<label class="check"><input id="scriptDot" type="checkbox"> Prefer DNS-over-TLS (Linux, opportunistic)</label>
+</div>
+<div class="controls">
+<button id="downloadScript">Download script</button>
+<button id="downloadAllScripts" class="ghost">Download all platforms</button>
+<button id="copyScript" class="ghost sm">Copy script</button>
+<span id="scriptNote" class="muted small"></span>
+</div>
+<pre id="scriptPreview" class="script" aria-label="Generated script preview"></pre>
+</section>
+
 <footer class="muted small">
 <p>Built without accounts, analytics, or a backend. Queries go directly from your browser to the providers over DNS-over-HTTPS. Settings, custom resolvers, and history never leave this device.</p>
 </footer>
@@ -307,7 +330,7 @@ const b64enc=s=>{const b=new TextEncoder().encode(s);let o='';b.forEach(x=>o+=St
 const b64dec=s=>{const bin=atob(s.replace(/-/g,'+').replace(/_/g,'/'));return new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)))};
 
 let settings=loadSettings();
-let state={results:null,sort:{key:'s',dir:-1},expanded:new Set(),running:false};
+let state={results:null,sort:{key:'s',dir:-1},expanded:new Set(),running:false,lastWinner:null,scriptPinned:null};
 let runController=null;
 
 function loadSettings(){
@@ -435,7 +458,12 @@ async function runBenchmark(){
   state.running=false;b.disabled=false;$('#cancel').disabled=true;
   render();
   const rec=bestFor(completed,effectiveWeights());
-  if(rec)document.title='Best public DNS: '+rec.n+' — DoH Benchmark';
+  if(rec){
+    document.title='Best public DNS: '+rec.n+' — DoH Benchmark';
+    if(!state.scriptPinned||state.scriptPinned===state.lastWinner)$('#scriptResolver').value=rec.n;
+    state.lastWinner=rec.n;
+  }
+  updateScriptPreview();
 }
 function cancelRun(silent){
   if(runController){runController.abort();runController=null}
@@ -674,6 +702,7 @@ function guideHtml(r){
 ${r.ip!=='custom'&&r.ip!=='per config'?`<button class="ghost sm" data-copy="${r.ip}">Copy IP</button>`:''}
 <button class="ghost sm" data-copy="${r.u}">Copy DoH URL</button>
 ${dot?`<button class="ghost sm" data-copy="${dot}">Copy DoT hostname</button>`:''}
+<button class="ghost sm" data-scripts="${r.n}">Setup scripts</button>
 </div>
 <h4>Windows</h4>
 <ol><li>Open <b>Settings → Network &amp; Internet</b> and select your connection.</li>
@@ -702,6 +731,196 @@ function openGuide(name){
   try{$('#guide').showModal()}catch{}
 }
 function closeGuide(){try{$('#guide').close()}catch{}}
+function dnsValue(r){
+  if(r.ip&&r.ip!=='custom'&&r.ip!=='per config')return r.ip;
+  try{return new URL(r.u).hostname}catch{return r.u}
+}
+function windowsScript(r){
+  const dns=dnsValue(r);
+  const note=dns!==r.ip?'# NOTE: this resolver is identified by a hostname, not a fixed IP.\n# Windows requires IP addresses for DNS servers. Resolve the hostname\n# (e.g. nslookup '+dns+') and replace the DNS value below with the IP.\n':'';
+  return`# Best Public DNS - setup script for Windows
+# Resolver: ${r.n}
+# DNS server: ${dns}
+# DoH endpoint: ${r.u}
+${note}
+# Run from an elevated PowerShell (right-click > Run as administrator):
+#   powershell -ExecutionPolicy Bypass -File .\\set-dns-windows.ps1
+#
+# Revert every adapter to automatic (DHCP) DNS:
+#   powershell -ExecutionPolicy Bypass -File .\\set-dns-windows.ps1 -Revert
+
+param([switch]$Revert)
+
+$DnsServers = @("${dns}")
+
+$principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+  Write-Host "Requesting administrator privileges..."
+  $extra = if ($Revert) { "-Revert" } else { "" }
+  Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File '${'$'}PSCommandPath' $extra"
+  exit
+}
+
+$adapters = Get-NetAdapter | Where-Object Status -eq "Up"
+
+foreach ($adapter in $adapters) {
+  $name = $adapter.InterfaceAlias
+  if ($Revert) {
+    Write-Host "Reverting $name to automatic (DHCP) DNS..."
+    Set-DnsClientServerAddress -InterfaceAlias $name -ResetServerAddresses
+  } else {
+    Write-Host "Setting DNS on $name to ${dns}..."
+    Set-DnsClientServerAddress -InterfaceAlias $name -ServerAddresses $DnsServers
+  }
+}
+
+Clear-DnsClientCache
+Write-Host "DNS cache flushed."
+Write-Host "Verify with: Get-DnsClientServerAddress | Select-Object InterfaceAlias, ServerAddresses"
+
+if (-not $Revert) {
+  Write-Host ""
+  Write-Host "Tip: Windows 11 turns on DNS-over-HTTPS automatically for recognized providers."
+  Write-Host "To set encrypted DNS for this endpoint, use Settings > Network & Internet > DNS."
+}
+`;
+}
+function macScript(r){
+  const dns=dnsValue(r);
+  const note=dns!==r.ip?'# NOTE: this resolver is identified by a hostname, not a fixed IP.\n# Older macOS versions may require an IP address here.\n':'';
+  return`#!/bin/bash
+# Best Public DNS - setup script for macOS
+# Resolver: ${r.n}
+# DNS server: ${dns}
+# DoH endpoint: ${r.u}
+${note}
+# Double-click this file, or run: sudo bash set-dns-macos.command
+#
+# Revert every network service to automatic DNS:
+#   sudo bash set-dns-macos.command --revert
+
+set -u
+
+DNS="${dns}"
+REVERT=0
+[ "\${1:-}" = "--revert" ] && REVERT=1
+
+if [ "$(id -u)" != "0" ]; then
+  echo "Requesting administrator privileges..."
+  exec sudo "$0" "$@"
+fi
+
+SERVICES=$(networksetup -listallnetworkservices | tail -n +2)
+
+if [ -z "$SERVICES" ]; then
+  echo "No network services found." >&2
+  exit 1
+fi
+
+for SVC in $SERVICES; do
+  if [ "$REVERT" = "1" ]; then
+    echo "Reverting '$SVC' to automatic DNS..."
+    networksetup -setdnsservers "$SVC" empty
+  else
+    echo "Setting DNS on '$SVC' to $DNS..."
+    networksetup -setdnsservers "$SVC" "$DNS"
+  fi
+done
+
+echo "Flushing DNS cache..."
+dscacheutil -flushcache
+killall -HUP mDNSResponder
+
+echo "Done. Verify with: networksetup -getdnsservers Wi-Fi"
+if [ "$REVERT" = "0" ]; then
+  echo "Revert any time with: sudo $0 --revert"
+fi
+`;
+}
+function linuxScript(r,dot){
+  const dns=dnsValue(r);
+  const note=dns!==r.ip?'# NOTE: this resolver is identified by a hostname, not a fixed IP.\n# It must resolve over your current DNS before this script runs.\n# Consider replacing DNS below with a resolved IP address.\n':'';
+  const dotLine=dot?'DNSOverTLS=opportunistic':'';
+  return`#!/bin/bash
+# Best Public DNS - setup script for Linux
+# Resolver: ${r.n}
+# DNS server: ${dns}
+# DoH endpoint: ${r.u}
+${note}
+# Run: sudo bash set-dns-linux.sh
+# Revert: sudo bash set-dns-linux.sh --revert
+# Auto-detects NetworkManager, then systemd-resolved, then /etc/resolv.conf.
+
+set -u
+
+DNS="${dns}"
+REVERT=0
+[ "\${1:-}" = "--revert" ] && REVERT=1
+
+if [ "$(id -u)" != "0" ]; then
+  echo "Requesting administrator privileges..."
+  exec sudo "$0" "$@"
+fi
+
+if command -v nmcli >/dev/null 2>&1 && { systemctl is-active --quiet NetworkManager 2>/dev/null || pgrep -x NetworkManager >/dev/null 2>&1; }; then
+  echo "Detected NetworkManager."
+  nmcli -t -f NAME con show --active | while IFS= read -r CON; do
+    [ -z "$CON" ] && continue
+    if [ "$REVERT" = "1" ]; then
+      echo "Reverting connection '$CON' to automatic DNS..."
+      nmcli con mod "$CON" ipv4.dns "" ipv4.ignore-auto-dns no ipv6.dns "" ipv6.ignore-auto-dns no
+    else
+      echo "Setting DNS on connection '$CON' to $DNS..."
+      nmcli con mod "$CON" ipv4.dns "$DNS" ipv4.ignore-auto-dns yes ipv6.dns "$DNS" ipv6.ignore-auto-dns yes
+    fi
+    nmcli con up "$CON" >/dev/null 2>&1 || true
+  done
+elif systemctl is-active --quiet systemd-resolved 2>/dev/null; then
+  echo "Detected systemd-resolved."
+  if [ "$REVERT" = "1" ]; then
+    rm -f /etc/systemd/resolved.conf.d/best-public-dns.conf
+  else
+    mkdir -p /etc/systemd/resolved.conf.d
+    cat > /etc/systemd/resolved.conf.d/best-public-dns.conf <<EOF
+[Resolve]
+DNS=$DNS
+${dotLine}
+EOF
+  fi
+  systemctl restart systemd-resolved
+  resolvectl flush-caches 2>/dev/null || true
+  if [ "$REVERT" = "0" ]; then
+    echo "DNS-over-TLS: ${dot?'enabled (opportunistic; edit the config to DNSOverTLS=yes to require it)':'not enabled; add DNSOverTLS=opportunistic to the config to enable it'}"
+    echo "If /etc/resolv.conf is a plain file, point it at the local stub with:"
+    echo "  printf 'nameserver 127.0.0.53\\n' > /etc/resolv.conf"
+  fi
+else
+  echo "No NetworkManager or systemd-resolved detected; writing /etc/resolv.conf directly."
+  echo "This may be overwritten by DHCP or a network manager."
+  if [ "$REVERT" = "1" ]; then
+    if [ -f /etc/resolv.conf.best-public-dns.bak ]; then
+      mv /etc/resolv.conf.best-public-dns.bak /etc/resolv.conf
+    fi
+  else
+    cp /etc/resolv.conf /etc/resolv.conf.best-public-dns.bak 2>/dev/null || true
+    printf "nameserver %s\\n" "$DNS" > /etc/resolv.conf
+  fi
+fi
+
+echo "Done. Verify with: resolvectl status 2>/dev/null || cat /etc/resolv.conf"
+`;
+}
+function buildScript(platform,r,dot){
+  if(platform==='windows')return windowsScript(r);
+  if(platform==='macos')return macScript(r);
+  return linuxScript(r,dot);
+}
+function scriptFilename(platform){
+  return{windows:'set-dns-windows.ps1',macos:'set-dns-macos.command',linux:'set-dns-linux.sh'}[platform];
+}
+function scriptMime(platform){
+  return platform==='windows'?'text/x-powershell':'text/x-shellscript';
+}
 
 function beep(){
   if(!settings.sound)return;
@@ -725,6 +944,29 @@ function applyTheme(){
 function renderCustomList(){
   const c=customResolvers();
   $('#customList').innerHTML=c.length?c.map((r,i)=>`<span class="tag">${r.n}<button class="ghost sm" style="margin-left:6px;padding:0 6px" data-rmcustom="${i}" aria-label="Remove ${r.n}">×</button></span>`).join(''):'';
+}
+function currentScriptResolver(){
+  const n=$('#scriptResolver').value;
+  return allResolvers().find(r=>r.n===n)||allResolvers()[0];
+}
+function populateScriptResolvers(){
+  const sel=$('#scriptResolver');
+  const cur=sel.value;
+  sel.innerHTML=allResolvers().map(r=>`<option value="${r.n}">${r.n}</option>`).join('');
+  if(cur&&allResolvers().some(r=>r.n===cur))sel.value=cur;
+}
+function updateScriptPreview(){
+  const platform=$('#scriptPlatform').value;
+  const r=currentScriptResolver();
+  const dot=platform==='linux'&&$('#scriptDot').checked;
+  $('#scriptDot').disabled=platform!=='linux';
+  $('#scriptPreview').textContent=buildScript(platform,r,dot);
+  const notes=[];
+  if(platform==='windows')notes.push('Run elevated: right-click PowerShell > Run as administrator');
+  if(platform==='macos')notes.push('Make executable: chmod +x set-dns-macos.command');
+  if(platform==='linux')notes.push('Make executable: chmod +x set-dns-linux.sh');
+  notes.push('Revert: pass -Revert (Windows) or --revert (macOS/Linux)');
+  $('#scriptNote').textContent=notes.join(' · ');
 }
 function syncControls(){
   $('#priority').value=settings.priority;
@@ -775,7 +1017,7 @@ function bind(){
     const c=customResolvers();
     if(c.some(r=>r.u===u)||R.some(r=>r.u===u)){$('#status').textContent='That endpoint is already in the list.';return}
     c.push({n,u,ip:'custom',t:['custom'],region:'Custom',privacy:5,security:0,family:0,ads:0,dot:''});
-    saveCustom(c);renderCustomList();
+    saveCustom(c);renderCustomList();populateScriptResolvers();
     $('#cname').value='';$('#curl').value='';
     $('#status').textContent=n+' added to the benchmark list.';
   };
@@ -791,11 +1033,37 @@ function bind(){
   $('#clearHistory').onclick=()=>{localStorage.removeItem(LS_HISTORY);drawChart();renderHistoryList();render()};
   $('#guideClose').onclick=closeGuide;
   $('#guide').addEventListener('click',e=>{if(e.target===$('#guide'))closeGuide()});
+  $('#scriptResolver').onchange=()=>{state.scriptPinned=$('#scriptResolver').value;updateScriptPreview()};
+  $('#scriptPlatform').onchange=updateScriptPreview;
+  $('#scriptDot').onchange=updateScriptPreview;
+  $('#downloadScript').onclick=()=>{
+    const platform=$('#scriptPlatform').value;
+    const r=currentScriptResolver();
+    const dot=platform==='linux'&&$('#scriptDot').checked;
+    download(scriptFilename(platform),buildScript(platform,r,dot),scriptMime(platform));
+    $('#status').textContent=scriptFilename(platform)+' downloaded. Review it before running.';
+  };
+  $('#downloadAllScripts').onclick=()=>{
+    const r=currentScriptResolver();
+    const dot=$('#scriptDot').checked;
+    ['windows','macos','linux'].forEach((p,i)=>setTimeout(()=>download(scriptFilename(p),buildScript(p,r,p==='linux'&&dot),scriptMime(p)),i*400));
+    $('#status').textContent='Downloading scripts for all three platforms.';
+  };
+  $('#copyScript').onclick=()=>copyText($('#scriptPreview').textContent).then(()=>{$('#status').textContent='Script copied to clipboard.'});
   document.addEventListener('click',e=>{
     const cp=e.target.closest('[data-copy]');
     if(cp){copyText(cp.dataset.copy).then(()=>{$('#status').textContent='Copied: '+cp.dataset.copy});return}
     const g=e.target.closest('[data-guide]');
     if(g){openGuide(g.dataset.guide);return}
+    const sc=e.target.closest('[data-scripts]');
+    if(sc){
+      closeGuide();
+      $('#scriptResolver').value=sc.dataset.scripts;
+      state.scriptPinned=sc.dataset.scripts;
+      updateScriptPreview();
+      try{$('#scriptsCard').scrollIntoView({behavior:'smooth'})}catch{}
+      return;
+    }
     const rt=e.target.closest('[data-retest]');
     if(rt){retest(rt.dataset.retest);return}
     const tg=e.target.closest('[data-toggle]');
@@ -820,6 +1088,8 @@ applyHash();
 syncControls();
 applyTheme();
 bind();
+populateScriptResolvers();
+updateScriptPreview();
 renderCustomList();
 render();
 renderHistoryList();

@@ -39,6 +39,11 @@ A zero-build web app that helps identify the best public DNS resolver for the vi
 **Setup help**
 - Per-resolver setup guide dialog with step-by-step instructions for Windows, macOS, Linux, iOS, Android, and routers
 - One-click copy for IP address, DoH URL, and DNS-over-TLS/Android Private DNS hostname
+- Downloadable, ready-to-run setup scripts per resolver for each platform:
+  - **Windows** (PowerShell): sets DNS on all active adapters, self-elevates to administrator, flushes the DNS cache; revert with `-Revert`
+  - **macOS** (bash): sets DNS on every network service via `networksetup`, self-sudo re-exec, flushes the DNS cache; revert with `--revert`
+  - **Linux** (bash): auto-detects NetworkManager, systemd-resolved (with optional opportunistic DNS-over-TLS), or `/etc/resolv.conf` fallback; revert with `--revert`
+- Live script preview before download, plus copy-to-clipboard and download-all-platforms
 
 **Interface**
 - Dark and light themes (persisted), print-friendly stylesheet
