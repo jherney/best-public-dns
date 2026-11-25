@@ -5,7 +5,8 @@ A zero-build web app that helps identify the best public DNS resolver for the vi
 ## Features
 
 **Benchmarking**
-- Tests 33 public resolvers: Cloudflare, Google, Quad9, AdGuard, NextDNS, Control D, DNS4EU, LibreDNS, DNS.WATCH, UncensoredDNS, Digitale Gesellschaft, DNS0.eu, Mullvad, CleanBrowsing, Comodo, OpenDNS, Yandex, Hurricane Electric, CIRA Canadian Shield, Alibaba, DNSPod
+- Lists 33 public resolvers: Cloudflare, Google, Quad9, AdGuard, NextDNS, Control D, DNS4EU, LibreDNS, UncensoredDNS, Digitale Gesellschaft, Mullvad, CleanBrowsing, OpenDNS, Yandex, Hurricane Electric, CIRA Canadian Shield, Alibaba, DNSPod
+- Resolvers whose DoH servers send no CORS headers can't be timed from a browser; they are marked "Not testable in browser", hidden by default, and still have setup guides and scripts
 - Measures cached and uncached lookup latency with median timing across multiple rounds
 - Configurable query type (A, AAAA, HTTPS, TXT, MX, NS, CNAME, CAA), rounds (1–15), and timeout (2/5/10 s)
 - Parallel or sequential test modes, plus randomize-order option to reduce bias

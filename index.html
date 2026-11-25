@@ -199,6 +199,7 @@ footer{margin:34px 0 10px;text-align:center}
 <div class="tablebar">
 <span id="count" class="muted small"></span>
 <div class="row-actions">
+<label class="small" style="display:inline-flex;align-items:center;gap:6px;flex-direction:row" title="Some providers' servers send no CORS headers, so a browser cannot time them. They still have setup guides and scripts."><input type="checkbox" id="showBlocked"> Show untestable resolvers</label>
 <button class="ghost sm" id="csv">Export CSV</button>
 <button class="ghost sm" id="json">Export JSON</button>
 <button class="ghost sm" id="copy">Copy table</button>
@@ -278,33 +279,33 @@ const R=[
 {n:'Google Public DNS',ip:'8.8.8.8',u:'https://dns.google/dns-query',t:['unfiltered'],region:'Global',privacy:4,security:0,family:0,ads:0,dot:'dns.google'},
 {n:'Quad9 Protected',ip:'9.9.9.9',u:'https://dns.quad9.net/dns-query',t:['malware'],region:'Global',privacy:8,security:9,family:0,ads:0,f:1,dot:'dns.quad9.net'},
 {n:'Quad9 Unsecured',ip:'9.9.9.10',u:'https://dns10.quad9.net/dns-query',t:['unfiltered'],region:'Global',privacy:8,security:0,family:0,ads:0,dot:'dns10.quad9.net'},
-{n:'AdGuard Default',ip:'94.140.14.14',u:'https://dns.adguard-dns.com/dns-query',t:['ads','trackers'],region:'Global',privacy:7,security:6,family:0,ads:9,f:1,dot:'dns.adguard-dns.com'},
-{n:'AdGuard Family',ip:'94.140.14.15',u:'https://family.adguard-dns.com/dns-query',t:['ads','adult'],region:'Global',privacy:7,security:6,family:9,ads:9,f:1,dot:'family.adguard-dns.com'},
-{n:'AdGuard Unfiltered',ip:'94.140.14.140',u:'https://unfiltered.adguard-dns.com/dns-query',t:['unfiltered'],region:'Global',privacy:7,security:0,family:0,ads:0,dot:'unfiltered.adguard-dns.com'},
-{n:'NextDNS',ip:'per config',u:'https://dns.nextdns.io',t:['configurable'],region:'Global',privacy:8,security:8,family:8,ads:8,f:1,dot:''},
-{n:'Control D Malware',ip:'76.76.2.11',u:'https://freedns.controld.com/p2',t:['malware'],region:'Global',privacy:7,security:8,family:0,ads:0,f:1,dot:''},
-{n:'Control D Ads+Trackers',ip:'76.76.2.11',u:'https://freedns.controld.com/p3',t:['ads','trackers'],region:'Global',privacy:7,security:6,family:0,ads:8,f:1,dot:''},
+{n:'AdGuard Default',ip:'94.140.14.14',u:'https://dns.adguard-dns.com/dns-query',nc:1,t:['ads','trackers'],region:'Global',privacy:7,security:6,family:0,ads:9,f:1,dot:'dns.adguard-dns.com'},
+{n:'AdGuard Family',ip:'94.140.14.15',u:'https://family.adguard-dns.com/dns-query',nc:1,t:['ads','adult'],region:'Global',privacy:7,security:6,family:9,ads:9,f:1,dot:'family.adguard-dns.com'},
+{n:'AdGuard Unfiltered',ip:'94.140.14.140',u:'https://unfiltered.adguard-dns.com/dns-query',nc:1,t:['unfiltered'],region:'Global',privacy:7,security:0,family:0,ads:0,dot:'unfiltered.adguard-dns.com'},
+{n:'NextDNS',ip:'per config',u:'https://dns.nextdns.io',nc:1,t:['configurable'],region:'Global',privacy:8,security:8,family:8,ads:8,f:1,dot:''},
+{n:'Control D Malware',ip:'76.76.2.1',u:'https://freedns.controld.com/p2',t:['malware'],region:'Global',privacy:7,security:8,family:0,ads:0,f:1,dot:''},
+{n:'Control D Ads+Trackers',ip:'76.76.2.2',u:'https://freedns.controld.com/p3',t:['ads','trackers'],region:'Global',privacy:7,security:6,family:0,ads:8,f:1,dot:''},
+{n:'Quad9 ECS',ip:'9.9.9.11',u:'https://dns11.quad9.net/dns-query',t:['malware','ecs'],region:'Global',privacy:7,security:9,family:0,ads:0,f:1,dot:'dns11.quad9.net'},
+{n:'Control D Unfiltered',ip:'76.76.2.0',u:'https://freedns.controld.com/p0',t:['unfiltered'],region:'Global',privacy:7,security:0,family:0,ads:0,dot:'p0.freedns.controld.com'},
+{n:'DNS4EU Unfiltered',ip:'86.54.11.100',u:'https://unfiltered.joindns4.eu/dns-query',t:['unfiltered'],region:'EU',privacy:8,security:0,family:0,ads:0,eu:1,dot:'unfiltered.joindns4.eu'},
 {n:'DNS4EU Protective',ip:'86.54.11.1',u:'https://protective.joindns4.eu/dns-query',t:['malware','phishing'],region:'EU',privacy:8,security:8,family:0,ads:0,f:1,eu:1,dot:'protective.joindns4.eu'},
-{n:'LibreDNS',ip:'116.202.176.26',u:'https://libredns.gr/dns-query',t:['malware','uncensored'],region:'EU',privacy:8,security:8,family:0,ads:0,f:1,eu:1,dot:'libredns.gr'},
-{n:'DNS.WATCH',ip:'84.200.69.80',u:'https://doh.dns.watch/dns-query',t:['unfiltered','uncensored'],region:'EU',privacy:8,security:0,family:0,ads:0,eu:1,dot:'doh.dns.watch'},
-{n:'UncensoredDNS',ip:'89.233.43.71',u:'https://doh.dishm.org/dns-query',t:['unfiltered','uncensored'],region:'EU',privacy:8,security:0,family:0,ads:0,eu:1,dot:'doh.dishm.org'},
-{n:'Digitale Gesellschaft',ip:'185.12.64.1',u:'https://dns.digitale-gesellschaft.ch/dns-query',t:['uncensored'],region:'CH',privacy:9,security:0,family:0,ads:0,eu:1,dot:'dns.digitale-gesellschaft.ch'},
-{n:'DNS0.eu',ip:'193.110.81.11',u:'https://doh.dns0.eu/dns-query',t:['uncensored'],region:'EU',privacy:8,security:0,family:0,ads:0,eu:1,dot:'doh.dns0.eu'},
-{n:'Mullvad Base',ip:'194.242.2.3',u:'https://base.dns.mullvad.net/dns-query',t:['unfiltered'],region:'EU',privacy:9,security:0,family:0,ads:0,dot:'base.dns.mullvad.net'},
-{n:'Mullvad AdBlock',ip:'194.242.2.4',u:'https://adblock.dns.mullvad.net/dns-query',t:['ads','trackers'],region:'EU',privacy:9,security:6,family:0,ads:9,f:1,dot:'adblock.dns.mullvad.net'},
-{n:'Mullvad Adult',ip:'194.242.2.5',u:'https://adult.dns.mullvad.net/dns-query',t:['adult'],region:'EU',privacy:9,security:6,family:9,ads:6,f:1,dot:'adult.dns.mullvad.net'},
-{n:'CleanBrowsing Security',ip:'185.228.168.168',u:'https://security-filter.cleanbrowsing.org/dns-query',t:['malware'],region:'Global',privacy:7,security:8,family:0,ads:0,f:1,dot:'security-filter.cleanbrowsing.org'},
-{n:'CleanBrowsing Family',ip:'185.228.169.168',u:'https://family-filter.cleanbrowsing.org/dns-query',t:['malware','adult'],region:'Global',privacy:7,security:8,family:9,ads:6,f:1,dot:'family-filter.cleanbrowsing.org'},
-{n:'CleanBrowsing Adult',ip:'185.228.169.11',u:'https://adult-filter.cleanbrowsing.org/dns-query',t:['adult'],region:'Global',privacy:7,security:6,family:9,ads:0,f:1,dot:'adult-filter.cleanbrowsing.org'},
-{n:'Comodo Secure DNS',ip:'8.26.56.26',u:'https://secure.dns.com/dns-query',t:['malware'],region:'Global',privacy:5,security:8,family:0,ads:0,f:1,dot:''},
-{n:'OpenDNS',ip:'208.67.222.222',u:'https://doh.opendns.com/dns-query',t:['malware'],region:'Global',privacy:5,security:6,family:0,ads:0,f:1,dot:''},
-{n:'Yandex Basic',ip:'77.88.8.8',u:'https://common-dns.yandex.net/dns-query',t:['unfiltered'],region:'RU',privacy:5,security:0,family:0,ads:0,dot:'common-dns.yandex.net'},
-{n:'Yandex Safe',ip:'77.88.8.7',u:'https://safe-dns.yandex.net/dns-query',t:['malware'],region:'RU',privacy:5,security:6,family:0,ads:0,f:1,dot:'safe-dns.yandex.net'},
-{n:'Yandex Family',ip:'77.88.8.3',u:'https://family-dns.yandex.net/dns-query',t:['malware','adult'],region:'RU',privacy:5,security:6,family:9,ads:6,f:1,dot:'family-dns.yandex.net'},
-{n:'Hurricane Electric',ip:'74.82.42.42',u:'https://doh.he.net/dns-query',t:['unfiltered'],region:'US',privacy:7,security:0,family:0,ads:0,dot:'doh.he.net'},
-{n:'CIRA Canadian Shield',ip:'10.10.10.10',u:'https://dns.cira.ca/dns-query',t:['malware'],region:'CA',privacy:8,security:8,family:0,ads:0,f:1,dot:'dns.cira.ca'},
-{n:'Alibaba DNS',ip:'223.5.5.5',u:'https://dns.alidns.com/dns-query',t:['unfiltered'],region:'CN',privacy:3,security:0,family:0,ads:0,dot:'dns.alidns.com'},
-{n:'DNSPod',ip:'119.29.29.29',u:'https://doh.pub/dns-query',t:['unfiltered'],region:'CN',privacy:3,security:0,family:0,ads:0,dot:'doh.pub'}
+{n:'LibreDNS',ip:'116.202.176.26',u:'https://libredns.gr/dns-query',nc:1,t:['malware','uncensored'],region:'EU',privacy:8,security:8,family:0,ads:0,f:1,eu:1,dot:'libredns.gr'},
+{n:'UncensoredDNS',ip:'89.233.43.71',u:'https://anycast.uncensoreddns.org/dns-query',nc:1,t:['unfiltered','uncensored'],region:'EU',privacy:8,security:0,family:0,ads:0,eu:1,dot:'anycast.uncensoreddns.org'},
+{n:'Digitale Gesellschaft',ip:'185.12.64.1',u:'https://dns.digitale-gesellschaft.ch/dns-query',nc:1,t:['uncensored'],region:'CH',privacy:9,security:0,family:0,ads:0,eu:1,dot:'dns.digitale-gesellschaft.ch'},
+{n:'Mullvad Base',ip:'194.242.2.3',u:'https://base.dns.mullvad.net/dns-query',nc:1,t:['unfiltered'],region:'EU',privacy:9,security:0,family:0,ads:0,dot:'base.dns.mullvad.net'},
+{n:'Mullvad AdBlock',ip:'194.242.2.4',u:'https://adblock.dns.mullvad.net/dns-query',nc:1,t:['ads','trackers'],region:'EU',privacy:9,security:6,family:0,ads:9,f:1,dot:'adblock.dns.mullvad.net'},
+{n:'Mullvad Family',ip:'194.242.2.6',u:'https://family.dns.mullvad.net/dns-query',nc:1,t:['ads','adult','gambling'],region:'EU',privacy:9,security:6,family:9,ads:6,f:1,dot:'family.dns.mullvad.net'},
+{n:'CleanBrowsing Security',ip:'185.228.168.168',u:'https://doh.cleanbrowsing.org/doh/security-filter/',t:['malware'],region:'Global',privacy:7,security:8,family:0,ads:0,f:1,dot:'security-filter.cleanbrowsing.org'},
+{n:'CleanBrowsing Family',ip:'185.228.169.168',u:'https://doh.cleanbrowsing.org/doh/family-filter/',t:['malware','adult'],region:'Global',privacy:7,security:8,family:9,ads:6,f:1,dot:'family-filter.cleanbrowsing.org'},
+{n:'CleanBrowsing Adult',ip:'185.228.169.11',u:'https://doh.cleanbrowsing.org/doh/adult-filter/',t:['adult'],region:'Global',privacy:7,security:6,family:9,ads:0,f:1,dot:'adult-filter.cleanbrowsing.org'},
+{n:'OpenDNS',ip:'208.67.222.222',u:'https://doh.opendns.com/dns-query',nc:1,t:['malware'],region:'Global',privacy:5,security:6,family:0,ads:0,f:1,dot:''},
+{n:'Yandex Basic',ip:'77.88.8.8',u:'https://common.dot.dns.yandex.net/dns-query',nc:1,t:['unfiltered'],region:'RU',privacy:5,security:0,family:0,ads:0,dot:'common.dot.dns.yandex.net'},
+{n:'Yandex Safe',ip:'77.88.8.7',u:'https://safe.dot.dns.yandex.net/dns-query',nc:1,t:['malware'],region:'RU',privacy:5,security:6,family:0,ads:0,f:1,dot:'safe.dot.dns.yandex.net'},
+{n:'Yandex Family',ip:'77.88.8.3',u:'https://family.dot.dns.yandex.net/dns-query',nc:1,t:['malware','adult'],region:'RU',privacy:5,security:6,family:9,ads:6,f:1,dot:'family.dot.dns.yandex.net'},
+{n:'Hurricane Electric',ip:'74.82.42.42',u:'https://ordns.he.net/dns-query',nc:1,t:['unfiltered'],region:'US',privacy:7,security:0,family:0,ads:0,dot:'ordns.he.net'},
+{n:'CIRA Canadian Shield',ip:'10.10.10.10',u:'https://dns.cira.ca/dns-query',nc:1,t:['malware'],region:'CA',privacy:8,security:8,family:0,ads:0,f:1,dot:'dns.cira.ca'},
+{n:'Alibaba DNS',ip:'223.5.5.5',u:'https://dns.alidns.com/dns-query',nc:1,t:['unfiltered'],region:'CN',privacy:3,security:0,family:0,ads:0,dot:'dns.alidns.com'},
+{n:'DNSPod',ip:'119.29.29.29',u:'https://doh.pub/dns-query',nc:1,t:['unfiltered'],region:'CN',privacy:3,security:0,family:0,ads:0,dot:'doh.pub'}
 ];
 const BASE_DOMAINS=['google.com','github.com','wikipedia.org','cloudflare.com','youtube.com','example.org','ietf.org'];
 const QT={A:1,NS:2,CNAME:5,SOA:6,PTR:12,MX:15,TXT:16,AAAA:28,CAA:257,SVCB:64,HTTPS:65};
@@ -339,7 +340,9 @@ function loadSettings(){
   }catch{return def}
 }
 function saveSettings(){localStorage.setItem(LS_SETTINGS,JSON.stringify(settings))}
-function customResolvers(){try{return JSON.parse(localStorage.getItem(LS_CUSTOM)||'[]')}catch{return[]}}
+const CUSTOM_NAME=/^[\w .()+&-]{1,40}$/;
+function validDohUrl(u){try{const x=new URL(u);return x.protocol==='https:'&&!x.username&&!x.password&&!/['"`$\\<>\s]/.test(u)?x.href:null}catch{return null}}
+function customResolvers(){try{const c=JSON.parse(localStorage.getItem(LS_CUSTOM)||'[]');return Array.isArray(c)?c.filter(r=>r&&CUSTOM_NAME.test(r.n)&&validDohUrl(r.u)).map(r=>({n:r.n,u:validDohUrl(r.u),ip:'custom',t:['custom'],region:'Custom',privacy:5,security:0,family:0,ads:0,dot:''})):[]}catch{return[]}}
 function saveCustom(c){localStorage.setItem(LS_CUSTOM,JSON.stringify(c))}
 function allResolvers(){return R.concat(customResolvers())}
 function history(){try{return JSON.parse(localStorage.getItem(LS_HISTORY)||'[]')}catch{return[]}}
@@ -356,12 +359,13 @@ function parseDns(msg){
   if(!msg||msg.length<12)return{rcode:-1,ttls:[]};
   const rcode=msg[3]&15,qd=(msg[4]<<8)|msg[5],an=(msg[6]<<8)|msg[7];
   let off=12;
-  for(let i=0;i<qd&&off<msg.length;i++){while(off<msg.length&&msg[off]!==0)off+=msg[off]+1;off+=5}
+  const skipName=()=>{while(off<msg.length){const l=msg[off];if(l===0){off++;return}if((l&192)===192){off+=2;return}off+=l+1}};
+  for(let i=0;i<qd&&off<msg.length;i++){skipName();off+=4}
   const ttls=[];
   for(let i=0;i<an&&off+10<msg.length;i++){
-    if(msg[off]&192)off+=2;else{while(off<msg.length&&msg[off]!==0)off+=msg[off]+1;off++}
+    skipName();if(off+10>msg.length)break;
     const type=(msg[off]<<8)|msg[off+1];off+=4;
-    const ttl=(msg[off]<<24)|(msg[off+1]<<16)|(msg[off+2]<<8)|msg[off+3];off+=4;
+    const ttl=((msg[off]<<24)|(msg[off+1]<<16)|(msg[off+2]<<8)|msg[off+3])>>>0;off+=4;
     const rd=(msg[off]<<8)|msg[off+1];off+=2+rd;
     if(type===1||type===28)ttls.push(ttl);
   }
@@ -389,6 +393,7 @@ async function probeDnssec(r,opts,signal){
   }catch{return'unknown'}
 }
 async function testResolver(r,opts,domains,signal){
+  if(r.nc)return{...r,c:null,cached:[],uncached:[],u2:null,fail:1,dnssec:'unknown',ttls:[],blocked:true};
   const cached=[],uncached=[],ttls=[];
   let fail=0,total=0;
   await q(r.u,'example.com',opts.qtype,opts.timeout,signal).catch(()=>null);
@@ -449,9 +454,10 @@ async function runBenchmark(){
     state.results=completed.length?completed:null;
     $('#status').textContent='Cancelled. '+completed.length+' of '+results.length+' resolvers completed.';
   }else{
-    const queries=results.length*(opts.rounds*2+2);
-    const fails=completed.reduce((s,r)=>s+Math.round(r.fail*opts.rounds*2),0);
-    $('#status').textContent='Benchmark complete in '+elapsed+' s — '+queries+' queries, '+(queries?((fails/queries)*100).toFixed(1):'0')+'% failed.';
+    const tested=completed.filter(r=>!r.blocked);
+    const queries=tested.length*opts.rounds*2;
+    const fails=tested.reduce((s,r)=>s+Math.round(r.fail*opts.rounds*2),0);
+    $('#status').textContent='Benchmark complete in '+elapsed+' s — '+queries+' queries, '+(queries?((fails/queries)*100).toFixed(1):'0')+'% failed'+(tested.length<completed.length?', '+(completed.length-tested.length)+' not testable in a browser':'')+'.';
     pushHistory({ts:Date.now(),priority:settings.priority,results:completed.map(r=>({n:r.n,c:r.c,u2:r.u2,f:r.fail,d:r.dnssec})),winner:bestFor(completed,effectiveWeights())?.n||'—'});
     drawChart();renderHistoryList();beep();
   }
@@ -484,7 +490,7 @@ function retest(name){
   $('#status').textContent='Re-testing '+name+'…';
   testResolver(r,opts,domains,new AbortController().signal).then(res=>{
     state.results[i]=res;
-    $('#status').textContent=name+' re-tested: '+((res.c??NaN).toFixed(0))+' ms cached median.';
+    $('#status').textContent=res.blocked?name+' cannot be tested from a browser.':res.c==null?name+' re-test failed (no successful queries).':name+' re-tested: '+res.c.toFixed(0)+' ms cached median.';
     render();drawChart();
   }).catch(()=>{$('#status').textContent=name+' re-test failed.'});
 }
@@ -493,6 +499,7 @@ function rowHtml(r,i,winner,prev){
   const tags=r.t.map(t=>`<span class="tag">${t}</span>`).join('')+(r.region?`<span class="tag${r.eu?' eu':''}">${r.region}</span>`:'');
   let cachedCell;
   if(r.pending)cachedCell='<span class="muted">Pending…</span>';
+  else if(r.blocked)cachedCell='<span class="muted" title="This provider\'s DoH server sends no CORS headers, so browsers block the response. Use the setup guide or scripts to try it directly.">Not testable in browser</span>';
   else if(r.c===null)cachedCell='<span class="error">Failed</span>';
   else{
     cachedCell=r.c.toFixed(0)+' ms';
@@ -500,7 +507,7 @@ function rowHtml(r,i,winner,prev){
     if(p!=null){const d=r.c-p;cachedCell+=d<0?` <span class="delta down" title="vs previous run">&#9660; ${Math.abs(d).toFixed(0)}</span>`:` <span class="delta up" title="vs previous run">&#9650; ${d.toFixed(0)}</span>`}
   }
   const uncachedCell=r.pending?'—':(r.u2===null?'—':r.u2.toFixed(0)+' ms');
-  const failCell=r.pending?'—':(r.fail*100).toFixed(0)+'%';
+  const failCell=r.pending||r.blocked?'—':(r.fail*100).toFixed(0)+'%';
   const dnsCell=r.pending?'—':r.dnssec==='yes'?'<span class="badge yes">Validating</span>':r.dnssec==='no'?'<span class="badge no">No</span>':'<span class="badge unk">—</span>';
   const scoreCell=r.pending?'—':(r.s<0?'—':r.s.toFixed(1)+`<div class="bar" style="width:${Math.max(5,r.s*10)}%"></div>`);
   const expanded=state.expanded.has(r.n);
@@ -531,7 +538,7 @@ function detailHtml(r){
 <div class="dstat"><span>Min TTL observed</span><b>${r.ttls&&r.ttls.length?Math.min(...r.ttls)+' s':'—'}</b></div>
 <div class="dstat"><span>DNSSEC validation</span><b>${dnssecTxt}</b></div>
 <div class="dstat"><span>DoH endpoint</span><b>${r.u}</b></div>
-<div class="dstat"><span>Queries attempted</span><b>${(c.length+u.length)+' / '+settings.rounds*2}</b></div>
+<div class="dstat"><span>Queries attempted</span><b>${(c.length+u.length)+' / '+runOpts().rounds*2}</b></div>
 </div>
 <div class="rounds">${roundsHtml}</div>
 <div class="breakdown">Weighted score breakdown — ${breakdown}</div>
@@ -543,7 +550,8 @@ function render(){
   const done=res.filter(r=>!r.pending);
   const scored=res.map(r=>r.pending?r:{...r,s:score(r,w)});
   const q=($('#search').value||'').trim().toLowerCase();
-  const vis=scored.filter(r=>!q||(r.n+' '+r.t.join(' ')+' '+r.ip+' '+(r.region||'')).toLowerCase().includes(q));
+  const showBlocked=$('#showBlocked').checked;
+  const vis=scored.filter(r=>(showBlocked||!r.blocked)&&(!q||(r.n+' '+r.t.join(' ')+' '+r.ip+' '+(r.region||'')).toLowerCase().includes(q)));
   const sorted=sortResults(vis);
   const tb=$('#results');
   if(!res.length){
@@ -552,16 +560,17 @@ function render(){
     return;
   }
   const prev=prevRunResults();
+  const best=bestFor(done,w)?.n;
   let html='';
   sorted.forEach((r,i)=>{
-    const winner=!r.pending&&i===0&&r.s>=0;
+    const winner=!r.pending&&r.n===best;
     html+=rowHtml(r,i,winner,prev?prev[r.n]:null);
     if(state.expanded.has(r.n))html+=detailHtml(r);
   });
   tb.innerHTML=html;
   renderSummary(done,w);
   renderWinners(done);
-  $('#count').textContent=done.length+' / '+res.length+' resolvers'+(q?' (filtered)':'');
+  $('#count').textContent=done.length+' / '+res.length+' resolvers'+(q?' (filtered)':'')+(showBlocked?'':(res.filter(r=>r.blocked).length?' · '+res.filter(r=>r.blocked).length+' untestable hidden':''));
   $$('#table th').forEach(th=>{
     const k=th.dataset.k;
     th.querySelector('.arr').textContent=state.sort.key===k?(state.sort.dir===1?'▲':'▼'):'';
@@ -590,7 +599,7 @@ function renderSummary(done,w){
 <div class="metric"><span>Recommended for ${labelFor(settings.priority)}</span><strong>${rec?rec.n:'—'}</strong></div>
 <div class="metric"><span>Fastest cached median</span><strong>${fast?fast.c.toFixed(0)+' ms':'—'}</strong></div>
 <div class="metric"><span>Most reliable</span><strong>${rel?rel.n+' ('+((1-rel.fail)*100).toFixed(0)+'%)':'—'}</strong></div>
-<div class="metric"><span>DNSSEC validating</span><strong>${validating} / ${done.length}</strong></div>`;
+<div class="metric"><span>DNSSEC validating</span><strong>${validating} / ${done.filter(r=>!r.blocked).length}</strong></div>`;
 }
 function renderWinners(done){
   const z=$('#winners');
@@ -689,8 +698,11 @@ function applyHash(){
   try{
     const s=JSON.parse(b64dec(m[1]));
     const allowed=['priority','qtype','rounds','timeout','parallel','filters','randomize','weights','theme'];
-    for(const k of allowed)if(s[k]!==undefined)settings[k]=s[k];
-    settings.weights={...loadSettings().weights,...(s.weights||{})};
+    const ok={priority:v=>v in PRESETS,qtype:v=>['A','AAAA','HTTPS','TXT','MX','NS','CNAME','CAA'].includes(v),rounds:v=>typeof v==="number"&&v>=1&&v<=15,timeout:v=>[2000,5000,10000].includes(v),parallel:v=>typeof v==='boolean',filters:v=>typeof v==='boolean',randomize:v=>typeof v==='boolean',theme:v=>v==='dark'||v==='light'};
+    for(const k of allowed)if(k!=='weights'&&s[k]!==undefined&&ok[k](s[k]))settings[k]=s[k];
+    const w={...loadSettings().weights};
+    if(s.weights&&typeof s.weights==='object')for(const k of Object.keys(w)){const v=s.weights[k];if(typeof v==='number'&&v>=0&&v<=10)w[k]=v}
+    settings.weights=w;
   }catch{}
 }
 
@@ -1008,12 +1020,15 @@ function bind(){
   $('#theme').onclick=()=>{settings.theme=settings.theme==='dark'?'light':'dark';saveSettings();applyTheme();drawChart()};
   $$('#weights input[type=range]').forEach(inp=>inp.oninput=()=>{settings.weights[inp.dataset.w]=+inp.value;saveSettings();updateWeightLabels();render()});
   $('#search').oninput=render;
+  $('#showBlocked').onchange=render;
   $('#expandAll').onclick=()=>{allResolvers().forEach(r=>state.expanded.add(r.n));render()};
   $('#collapseAll').onclick=()=>{state.expanded.clear();render()};
   $('#addResolver').onclick=()=>{
     const n=$('#cname').value.trim(),u=$('#curl').value.trim();
     if(!n||!u){$('#status').textContent='Enter both a name and a DoH URL.';return}
-    if(!/^https:\/\/.+/.test(u)){$('#status').textContent='DoH URLs must start with https://';return}
+    if(!CUSTOM_NAME.test(n)){$('#status').textContent='Names may use letters, numbers, spaces and . ( ) + & - (max 40).';return}
+    if(!validDohUrl(u)){$('#status').textContent='Enter a valid https:// DoH URL.';return}
+    if(allResolvers().some(r=>r.n===n)){$('#status').textContent='A resolver with that name already exists.';return}
     const c=customResolvers();
     if(c.some(r=>r.u===u)||R.some(r=>r.u===u)){$('#status').textContent='That endpoint is already in the list.';return}
     c.push({n,u,ip:'custom',t:['custom'],region:'Custom',privacy:5,security:0,family:0,ads:0,dot:''});
