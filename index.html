@@ -876,14 +876,18 @@ fi
 
 if command -v nmcli >/dev/null 2>&1 && { systemctl is-active --quiet NetworkManager 2>/dev/null || pgrep -x NetworkManager >/dev/null 2>&1; }; then
   echo "Detected NetworkManager."
-  nmcli -t -f NAME con show --active | while IFS= read -r CON; do
-    [ -z "$CON" ] && continue
+  case "$DNS" in *:*) FAM=ipv6;; *) FAM=ipv4;; esac
+  # Only real network links: skip loopback, docker, bridges, VPNs
+  nmcli -t -f NAME,TYPE con show --active | while IFS= read -r LINE; do
+    TYPE="\${LINE##*:}"; CON="\${LINE%:*}"; CON="\${CON//\\\\:/:}"
+    case "$TYPE" in 802-3-ethernet|802-11-wireless) ;; *) continue;; esac
     if [ "$REVERT" = "1" ]; then
       echo "Reverting connection '$CON' to automatic DNS..."
       nmcli con mod "$CON" ipv4.dns "" ipv4.ignore-auto-dns no ipv6.dns "" ipv6.ignore-auto-dns no
     else
       echo "Setting DNS on connection '$CON' to $DNS..."
-      nmcli con mod "$CON" ipv4.dns "$DNS" ipv4.ignore-auto-dns yes ipv6.dns "$DNS" ipv6.ignore-auto-dns yes
+      # Set the address on its own IP family; ignore router-supplied DNS on both
+      nmcli con mod "$CON" "$FAM.dns" "$DNS" ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes
     fi
     nmcli con up "$CON" >/dev/null 2>&1 || true
   done
